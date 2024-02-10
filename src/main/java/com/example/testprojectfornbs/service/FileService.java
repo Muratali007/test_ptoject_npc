@@ -3,11 +3,17 @@ package com.example.testprojectfornbs.service;
 import com.example.testprojectfornbs.data.entity.File;
 import com.example.testprojectfornbs.data.repository.FileRepository;
 import com.example.testprojectfornbs.exception.CustomException;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -19,31 +25,38 @@ import org.springframework.web.multipart.MultipartFile;
 public class FileService {
   private final FileRepository fileRepository;
 
+  @Value("${file.upload.path}")
+  private String fileUploadPath;
+
   public FileService(FileRepository fileRepository) {
     this.fileRepository = fileRepository;
   }
 
-  public void uploadFile(MultipartFile file) {
-    File fileToSave = new File();
-    String fileName = file.getOriginalFilename().replace(".mp3", "");
-    String filePath = "C:\\Users\\Muratali\\Downloads\\" + file.getOriginalFilename();
+  public void uploadFile(MultipartFile file) throws FileNotFoundException {
+    String fileName = file.getOriginalFilename();
+    if (fileName != null && !fileName.isEmpty()) {
+      String filePath = fileUploadPath + "\\" + fileName;
+      try {
+        byte[] bytes = file.getBytes();
+        Path path = Paths.get(filePath);
+        Files.write(path, bytes);
 
-    fileToSave.setFileDate(new Date());
-    fileToSave.setFilePath(filePath);
-    fileToSave.setFileName(fileName);
-    fileRepository.save(fileToSave);
-    log.info("file saving in database");
+        saveFileInDb(fileName, filePath);
+        log.info("file saved in system");
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    } else {
+      throw new FileNotFoundException();
+    }
   }
 
-  public void uploadFileDateFromName(MultipartFile file) {
+  public void saveFileInDb(String fileName, String filePath) {
     File fileToSave = new File();
-    String fileName = file.getOriginalFilename().replace(".mp3", "");
     Date date = findDateFromName(fileName);
-    String filePath = "C:\\Users\\Muratali\\Downloads\\" + file.getOriginalFilename();
-
     fileToSave.setFileDate(date);
     fileToSave.setFilePath(filePath);
-    fileToSave.setFileName(fileName);
+    fileToSave.setFileName(fileName.replace(".mp3", ""));
     fileRepository.save(fileToSave);
     log.info("file saving in database");
   }

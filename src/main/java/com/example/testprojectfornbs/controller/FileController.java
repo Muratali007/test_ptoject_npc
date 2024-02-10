@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileNotFoundException;
+
 @Controller
 @RequestMapping("/file")
 public class FileController {
@@ -21,17 +23,10 @@ public class FileController {
   private FileService fileService;
 
   @PostMapping("/upload")
-  public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
+  public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) throws FileNotFoundException {
     fileService.uploadFile(file);
     return new ResponseEntity<>(HttpStatus.OK);
   }
-
-  @PostMapping("/upload/date")
-  public ResponseEntity<?> uploadFileDateFromName(@RequestParam("file") MultipartFile file) {
-    fileService.uploadFileDateFromName(file);
-    return new ResponseEntity<>(HttpStatus.OK);
-  }
-
   @GetMapping("/fileInfo")
   public ResponseEntity<?> getFileInfo(@RequestParam String fileName) {
     return ResponseEntity.ok(fileService.getFileInfo(fileName));
