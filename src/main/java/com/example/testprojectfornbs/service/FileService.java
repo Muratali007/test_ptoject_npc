@@ -74,7 +74,6 @@ public class FileService {
     Optional<File> file = fileRepository.findByFileName(fileName);
     if (file.isPresent()) {
       log.info("get file info");
-
       return file.get();
     }
     throw new CustomException("file does not exit", HttpStatus.NOT_FOUND);
